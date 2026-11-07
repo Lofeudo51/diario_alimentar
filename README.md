@@ -1,3 +1,3 @@
 # diario_alimentat
 controle diário de alimentos
-Em criação somente com apoio de IA Claude, sem consulta de nutricionista, de uso pessoal. Caso alguém queira usar vai ser por conta e risco de cada um.
+Aviso: ferramenta pessoal de acompanhamento. Os valores nutricionais são aproximados, baseados em tabelas e rótulos, e as metas são exemplos. Não substitui a orientação de nutricionista, médico ou outro profissional de saúde. Desenvolvido por lofeudo51 com apoio do Claude (IA da Anthropic). O autor não é nutricionista.
