@@ -1,0 +1,1077 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diário Alimentar</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --txt:#1d2330; --muted:#6b7280; --acc:#2563eb; --line:#e5e7eb;
+          --prot:#2563eb; --carb:#f59e0b; --gord:#dc2626; --ok:#16a34a; --over:#dc2626; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#111418; --card:#1b1f26; --txt:#e8ebf0; --muted:#9aa3b2; --acc:#60a5fa; --line:#2a303a;
+            --prot:#60a5fa; --carb:#fbbf24; --gord:#f87171; --ok:#4ade80; --over:#f87171; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:12px; font-family: system-ui, sans-serif; background:var(--bg); color:var(--txt); }
+  h1 { font-size:20px; margin:4px 0 12px; }
+  h2 { font-size:16px; margin:0 0 6px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:12px; }
+  label { font-size:13px; color:var(--muted); display:block; margin-bottom:4px; }
+  select, input { width:100%; padding:10px; font-size:16px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--txt); margin-bottom:8px; }
+  button { padding:10px 14px; font-size:15px; border:0; border-radius:8px; background:var(--acc); color:#fff; cursor:pointer; }
+  button.sec { background:transparent; color:var(--acc); border:1px solid var(--line); }
+  button.danger { background:transparent; color:#dc2626; border:1px solid var(--line); }
+  .row { display:flex; gap:8px; }
+  .row > * { flex:1; }
+  .tot { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; text-align:center; margin-top:8px; }
+  .tot div { background:var(--bg); border-radius:8px; padding:6px 2px; }
+  .tot b { display:block; font-size:16px; }
+  .tot span { font-size:11px; color:var(--muted); }
+  .tot small { display:block; font-size:10px; color:var(--muted); }
+  .ok b { color:var(--ok); }
+  .over b { color:var(--over); }
+  .item { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--line); font-size:14px; }
+  .item:last-child { border-bottom:0; }
+  .small { font-size:12px; color:var(--muted); }
+
+  /* barra de meta do dia */
+  .meta-head { display:flex; justify-content:space-between; font-size:14px; margin-top:4px; }
+  .meta-track { position:relative; background:var(--bg); border-radius:8px; height:26px; overflow:hidden; margin-top:6px; border:1px solid var(--line); }
+  .meta-fill { height:100%; border-radius:8px; }
+  .meta-line { position:absolute; top:-4px; bottom:-4px; right:0; width:2px; background:var(--txt); }
+  .meta-label { font-size:11px; color:var(--muted); text-align:right; margin-top:2px; }
+  .coca-marca { position:absolute; top:-4px; bottom:-4px; left:60%; width:2px; background:var(--over); }
+
+  /* gráfico por refeição */
+  .bar-row { margin-bottom:12px; }
+  .bar-head { display:flex; justify-content:space-between; font-size:14px; margin-bottom:4px; }
+  .bar-track { background:var(--bg); border-radius:6px; height:22px; overflow:hidden; display:flex; }
+  .seg { height:100%; }
+  .legend { display:flex; gap:12px; font-size:12px; color:var(--muted); margin-top:4px; flex-wrap:wrap; }
+  .dot { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:4px; vertical-align:middle; }
+  .bar-macros { font-size:12px; color:var(--muted); margin-top:3px; }
+
+  /* abas */
+  .tabs { display:flex; gap:6px; overflow-x:auto; padding-bottom:6px; margin-bottom:8px; border-bottom:1px solid var(--line); }
+  .tab { flex:0 0 auto; padding:8px 12px; font-size:14px; border:1px solid var(--line); border-radius:8px; background:transparent; color:var(--txt); }
+  .tab.ativa { background:var(--acc); color:#fff; border-color:var(--acc); }
+
+  /* abas principais: ocupam a largura toda, com cor própria */
+  .tabs-top { overflow:visible; position:sticky; top:0; z-index:10; background:var(--bg); padding-top:6px; }
+  .tabs-top .tab { flex:1; text-align:center; font-weight:600; font-size:15px; border-width:2px; padding:10px 6px; }
+  .tab-ap { color:#2563eb; border-color:#2563eb; }
+  .tab-ap.ativa { background:#2563eb; color:#fff; }
+  .tab-su { color:#7c3aed; border-color:#7c3aed; }
+  .tab-su.ativa { background:#7c3aed; color:#fff; }
+  .tab-ag { color:#0891b2; border-color:#0891b2; }
+  .tab-ag.ativa { background:#0891b2; color:#fff; }
+  .tab-at { color:#ea580c; border-color:#ea580c; }
+  .tab-at.ativa { background:#ea580c; color:#fff; }
+
+  /* botões de água */
+  .botoes { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-top:8px; }
+  .botoes.dois { grid-template-columns:repeat(2,1fr); }
+  .botoes button { padding:10px 4px; font-size:14px; }
+
+  /* sugestões */
+  .restante { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; text-align:center; }
+  .restante div { background:var(--bg); border-radius:8px; padding:6px 2px; }
+  .restante b { display:block; font-size:16px; }
+  .restante span { font-size:11px; color:var(--muted); }
+  .sug-linha { display:flex; justify-content:space-between; font-size:14px; padding:4px 0; border-bottom:1px solid var(--line); }
+  .sug-linha:last-child { border-bottom:0; }
+  .mont-linha { display:flex; gap:6px; margin-bottom:6px; }
+  .mont-linha select { flex:2; margin:0; }
+  .mont-linha input { flex:1; margin:0; }
+  .mbar { margin-bottom:8px; font-size:13px; }
+  .mbar-head { display:flex; justify-content:space-between; }
+  .mbar-track { height:14px; background:var(--bg); border-radius:6px; overflow:hidden; border:1px solid var(--line); margin-top:3px; }
+  .mbar-fill { height:100%; }
+  [hidden] { display:none !important; }
+  .modal { position:fixed; inset:0; z-index:100; overflow:auto; background:var(--bg); padding:12px; }
+  /* rosca para escolher vários alimentos */
+  #rosca { width:100%; max-width:360px; display:block; margin:0 auto; overflow:visible; }
+  #rosca text { cursor:pointer; font-size:15px; fill:var(--txt); font-family:system-ui, sans-serif; }
+  #rosca text.ativo { font-weight:700; }
+  .rosca-titulo { font-weight:600; font-size:15px; margin:10px 0 2px; }
+  .rosca-item { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 0; border-bottom:1px solid var(--line); font-size:14px; }
+  .rosca-item label { flex:1; display:flex; align-items:center; gap:8px; margin:0; color:var(--txt); font-size:14px; }
+  .rosca-item input[type=checkbox] { width:18px; height:18px; margin:0; padding:0; }
+  .rosca-item input[type=number] { width:90px; margin:0; padding:8px; font-size:15px; }
+  .rosca-item { flex-wrap:wrap; }
+  .rosca-val { width:100%; font-size:12px; color:var(--muted); padding-left:26px; min-height:0; }
+  .rosca-val:empty { display:none; }
+</style>
+</head>
+<body>
+
+
+<div class="tabs tabs-top">
+  <button class="tab tab-ap ativa" id="t-ap">Apontamento</button>
+  <button class="tab tab-su" id="t-su">Sugestões</button>
+  <button class="tab tab-ag" id="t-ag">Água</button>
+  <button class="tab tab-at" id="t-at">Atividade</button>
+</div>
+
+<!-- ===== APONTAMENTO ===== -->
+<div id="vista-ap">
+
+<div class="row" style="margin-bottom:12px">
+  <button id="abrir-modal" style="background:#2563eb;color:#fff;border:0">Escolher alimentos</button>
+  <button id="toggle-avulso" style="background:#64748b;color:#fff;border:0">Alimento avulso ou Outro</button>
+</div>
+
+<div class="card" id="avulso" hidden>
+  <div class="row">
+    <div><label>Refeição</label>
+      <select id="refeicao">
+        <option>Café da manhã</option><option>Meio da manhã</option><option>Almoço</option><option>Lanche</option><option>Jantar</option><option>Outro</option>
+      </select>
+    </div>
+    <div><label>Alimento</label>
+      <select id="alimento"></select>
+    </div>
+  </div>
+  <div id="outro-campos" style="display:none;background:var(--bg);border-radius:8px;padding:8px;margin-bottom:8px">
+    <label>Nome (ex.: Marmita de abobrinha com soja)</label>
+    <input id="outro-nome" type="text" placeholder="nome do alimento">
+    <label>Valores do rótulo, por porção</label>
+    <div class="row">
+      <input id="outro-porcao" type="number" inputmode="decimal" placeholder="porção (g)">
+      <input id="outro-kcal" type="number" inputmode="decimal" placeholder="kcal">
+    </div>
+    <div class="row">
+      <input id="outro-prot" type="number" inputmode="decimal" placeholder="proteína (g)">
+      <input id="outro-carb" type="number" inputmode="decimal" placeholder="carboidrato (g)">
+      <input id="outro-gord" type="number" inputmode="decimal" placeholder="gordura (g)">
+      <input id="outro-fibra" type="number" inputmode="decimal" placeholder="fibra (g)">
+    </div>
+    <div class="small">Os valores são da porção acima. Depois, digite a quantidade que você comeu em gramas.</div>
+  </div>
+  <label>Quantidade (gramas)</label>
+  <div class="row">
+    <input id="gramas" type="number" inputmode="decimal" placeholder="ex.: 100">
+    <button id="add">Adicionar</button>
+  </div>
+  <div id="preview" class="small"></div>
+</div>
+
+<div id="modal" class="modal" hidden>
+<div class="row" style="align-items:center;margin-bottom:10px"><h2 style="margin:0;flex:1">Escolher alimentos</h2><button class="sec" id="modal-fechar" style="flex:0 0 auto">Fechar</button></div>
+<div class="card">
+  <label>Vai para a refeição</label>
+  <select id="rosca-refeicao">
+    <option>Café da manhã</option><option>Meio da manhã</option><option>Almoço</option><option>Lanche</option><option>Jantar</option><option>Outro</option>
+  </select>
+  <div class="small" style="margin-bottom:6px">Toque numa fatia, marque os alimentos e digite as gramas. Depois toque em "Adicionar selecionados": tudo entra de uma vez na refeição escolhida acima.</div>
+  <svg id="rosca" viewBox="0 0 460 400" role="img" aria-label="Grupos de alimentos"></svg>
+  <div id="rosca-lista"></div>
+  <div class="small" id="rosca-cont" style="margin-top:8px">0 selecionado(s)</div>
+  <button id="rosca-add" style="width:100%;margin-top:8px">Adicionar selecionados à refeição</button>
+</div>
+</div>
+
+<div class="card">
+  <h2>Acumulado do dia</h2>
+  <div class="meta-head"><span id="meta-real"></span><span id="meta-pct" class="small"></span></div>
+  <div class="meta-track"><div id="meta-fill" class="meta-fill"></div><div class="meta-line"></div></div>
+  <div class="meta-label" id="meta-label"></div>
+  <div id="total-dia" class="tot"></div>
+  <div class="small" style="margin-top:6px">Verde: dentro da meta. Vermelho: acima da meta.</div>
+  <div class="row" style="margin-top:10px">
+    <button class="sec" id="desfazer">Desfazer último</button>
+    <button class="danger" id="zerar">Zerar o dia</button>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Calorias por refeição</h2>
+  <div id="grafico" class="small">Nada registrado hoje ainda.</div>
+  <div class="legend">
+    <span><span class="dot" style="background:var(--prot)"></span>Proteína</span>
+    <span><span class="dot" style="background:var(--carb)"></span>Carboidrato</span>
+    <span><span class="dot" style="background:var(--gord)"></span>Gordura</span>
+  </div>
+  <div class="small" style="margin-top:6px">A barra mostra a parte de calorias de cada macronutriente. A largura de cada refeição é proporcional ao total de calorias do dia.</div>
+</div>
+
+<div class="card">
+  <h2>Refeições</h2>
+  <div id="abas" class="tabs"></div>
+  <div id="refeicoes" class="small">Nada registrado hoje ainda.</div>
+</div>
+
+</div>
+
+<!-- ===== SUGESTÕES ===== -->
+<div id="vista-su" style="display:none">
+
+<div class="card">
+  <h2>Quanto ainda cabe hoje</h2>
+  <div id="restante" class="restante"></div>
+  <div class="small" style="margin-top:6px">Calculado a partir do que já está no Apontamento.</div>
+</div>
+
+<div class="card">
+  <h2>Sugestão para a próxima refeição</h2>
+  <div id="sugestoes"></div>
+</div>
+
+<div class="card">
+  <h2>Montar refeição</h2>
+  <div id="montagem"></div>
+  <button class="sec" id="mont-add" style="width:100%;margin-top:6px">+ Adicionar alimento</button>
+  <div id="mont-barras" style="margin-top:12px"></div>
+  <button id="mont-registrar" style="width:100%;margin-top:12px">Registrar refeição</button>
+</div>
+
+</div>
+
+<!-- ===== ATIVIDADE ===== -->
+<div id="vista-at" style="display:none">
+
+<div class="card">
+  <h2>Caminhada</h2>
+  <div class="row">
+    <div><label>Distância (km)</label><input id="at-km" type="number" inputmode="decimal" placeholder="ex.: 5,38"></div>
+    <div><label>Velocidade (km/h)</label><input id="at-v" type="number" inputmode="decimal" value="4"></div>
+  </div>
+  <button id="at-add" style="width:100%">Adicionar caminhada</button>
+  <div class="small" style="margin-top:6px">Só para acompanhamento. Não altera a meta de calorias do dia.</div>
+</div>
+
+<div class="card">
+  <h2 id="at-titulo">Registros do dia</h2>
+  <div class="tot" style="grid-template-columns:repeat(2,1fr)">
+    <div><b id="at-total-km">0</b><span>km</span></div>
+    <div><b id="at-total-kcal">0</b><span>kcal extra</span></div>
+  </div>
+  <div id="at-lista" style="margin-top:8px"></div>
+  <div class="row" style="margin-top:10px">
+    <button class="sec" id="at-desfazer">Desfazer última</button>
+  </div>
+</div>
+
+</div>
+
+<!-- ===== ÁGUA ===== -->
+<div id="vista-ag" style="display:none">
+
+<div class="card">
+  <h2>Água hoje</h2>
+  <div class="meta-head"><span id="agua-real"></span><span id="agua-pct" class="small"></span></div>
+  <div class="meta-track"><div id="agua-fill" class="meta-fill"></div><div class="meta-line"></div></div>
+  <div class="meta-label" id="agua-label"></div>
+  <div id="botoes-agua" class="botoes"></div>
+  <div class="row" style="margin-top:10px">
+    <button class="sec" id="agua-desfazer">Desfazer último</button>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Coca Zero</h2>
+  <div id="coca-real" class="small"></div>
+  <div class="meta-track"><div id="coca-fill" class="meta-fill"></div><div class="coca-marca"></div><div class="meta-line"></div></div>
+  <div class="meta-label">escala até 5 copos (2000 ml) · traço vermelho = limite de 3 copos</div>
+  <div id="botoes-coca" class="botoes"></div>
+  <div class="row" style="margin-top:10px">
+    <button class="sec" id="coca-desfazer">Desfazer último de Coca</button>
+  </div>
+  <div class="small" style="margin-top:6px">Limite do dia: 3 copos (1200 ml). Não entra nas calorias nem nos macros.</div>
+</div>
+
+</div>
+
+<div class="small" style="margin-top:16px;padding:0 4px;line-height:1.5">
+  <b>Aviso:</b> ferramenta pessoal de acompanhamento. Os valores nutricionais são aproximados, baseados em tabelas e rótulos, e as metas são exemplos. Não substitui a orientação de nutricionista, médico ou outro profissional de saúde. Desenvolvido por <b>lofeudo51</b> com apoio do Claude (IA da Anthropic). O autor não é nutricionista.
+</div>
+
+<script>
+// ====== CONFIGURAÇÕES ======
+const META_KCAL = 1900;
+// Meta de proteína em gramas. O restante das calorias é dividido entre carboidrato e gordura
+// na proporção abaixo (50 : 30).
+const META_PROT_G = 130;
+const SPLIT = { carb: 0.50, gord: 0.30 };
+
+// Valores por 100 g. Alimentos de base (arroz, ovo, banana...) seguem a Tabela TACO.
+// Produtos de marca (Whey, Danone, Parmalat, Requeijão, Chemberry, bombons) devem vir do rótulo.
+// Para acrescentar um alimento, copie uma linha e ajuste os valores.
+const ALIMENTOS = {
+  "Arroz cozido":        {kcal:128, prot:2.5,  carb:28.1, gord:0.2},
+  "Feijão carioca cozido":{kcal:76, prot:4.8,  carb:13.6, gord:0.5},
+  "Aveia (flocos)":      {kcal:394, prot:13.9, carb:66.6, gord:8.5},
+  "Iogurte Danone desnatado": {kcal:52.5, prot:5.6, carb:8.1, gord:0.2},
+  "Banana":              {kcal:89,  prot:1.1,  carb:22.8, gord:0.3},
+  "Banana nanica":       {kcal:92,  prot:1.4,  carb:23.8, gord:0.1},
+  "Mel":                 {kcal:304, prot:0.3,  carb:82.4, gord:0},
+  "Ovo cozido":          {kcal:146, prot:13.3, carb:0.6,  gord:9.5},
+  "Frango grelhado (peito)": {kcal:159, prot:32, carb:0, gord:2.5},
+  "Queijo branco":       {kcal:264, prot:18,   carb:3,    gord:20},
+  "Tomate":              {kcal:15,  prot:1.1,  carb:3.1,  gord:0.2},
+  "Cenoura crua":        {kcal:34,  prot:1.3,  carb:7.7,  gord:0.2},
+  "Beterraba cozida":    {kcal:32,  prot:1.3,  carb:7.2,  gord:0.1},
+  "Alface crespa":       {kcal:14,  prot:1.3,  carb:2.2,  gord:0.2},
+  "Ovo cru":             {kcal:143, prot:12.6, carb:0.7,  gord:9.5},
+  "Azeite de oliva":     {kcal:884, prot:0,    carb:0,    gord:100},
+  "Mussarela":           {kcal:300, prot:22,   carb:2.2,  gord:22},
+  "Presunto":            {kcal:107, prot:14.4, carb:1.5,  gord:4.5},
+  "Mamão":               {kcal:40,  prot:0.5,  carb:10.4, gord:0.1},
+  "Melão":               {kcal:29,  prot:0.9,  carb:7.5,  gord:0.2},
+  "Melancia":            {kcal:30,  prot:0.6,  carb:7.6,  gord:0.2},
+  "Tangerina":           {kcal:53,  prot:0.8,  carb:13.3, gord:0.3},
+  "Mexerica morgote":    {kcal:53,  prot:0.8,  carb:13.3, gord:0.3},
+  "Chocolate amargo (70%)": {kcal:580, prot:8, carb:45, gord:42},
+  "Chocolate ao leite":  {kcal:535, prot:7.7,  carb:59.4, gord:29.7},
+  "Bombom Alpino (ao leite)": {kcal:546, prot:7.7, carb:55.4, gord:32.3},
+  "Bombom Ouro Branco":  {kcal:535, prot:5,    carb:60,   gord:29.5},
+  "Bombom Sonho de Valsa": {kcal:488, prot:5.6, carb:60.5, gord:29.3},
+  "Cocada":              {kcal:400, prot:2,    carb:60,   gord:18},
+  "Manteiga":            {kcal:717, prot:0.9,  carb:0.1,  gord:81.1},
+  "Creme de ricota":     {kcal:180, prot:8,    carb:4,    gord:14},
+  "Requeijão cremoso":   {kcal:260, prot:9,    carb:4,    gord:24},
+  "Geleia de morango Chemberry": {kcal:250, prot:0.4, carb:62, gord:0.1},
+  "Pão francês":         {kcal:300, prot:8,    carb:58.6, gord:3.1},
+  "Pão de forma":        {kcal:263, prot:8.5,  carb:49.7, gord:3.5},
+  "Pão de bisnaguinha":  {kcal:280, prot:8,    carb:52,   gord:4},
+  "Whey protein":        {kcal:400, prot:80,   carb:8,    gord:6},
+  "Parmalat Fit chocolate (bebida láctea)": {kcal:66, prot:9.3, carb:4.9, gord:1},
+  "Leite desnatado":     {kcal:35,  prot:3.4,  carb:4.8,  gord:0.2},
+  "Beterraba crua":      {kcal:43,  prot:1.6,  carb:9.6,  gord:0.2},
+  "Filé mignon bovino (cru, sem gordura)": {kcal:143, prot:21.6, carb:0, gord:5.6},
+  "Patinho bovino (cru, sem gordura)":     {kcal:133, prot:21.7, carb:0, gord:4.5},
+  "Brócolis cru":        {kcal:25,  prot:3.6,  carb:4.0,  gord:0.3},
+  "Cappuccino de máquina (café com leite)": {kcal:31.4, prot:1.7, carb:2.6, gord:1.7},
+  "Bolo de padaria (aipim ou milho, média)": {kcal:317.5, prot:4.6, carb:46.5, gord:12.6},
+  "Manga": {kcal:65, prot:0.5, carb:17, gord:0.3},
+  "Óleo de soja": {kcal:884, prot:0, carb:0, gord:100},
+  "Óleo de girassol": {kcal:884, prot:0, carb:0, gord:100},
+  "Margarina com sal": {kcal:594, prot:0, carb:0, gord:67.2},
+  "Castanha do Brasil crua": {kcal:643, prot:14.5, carb:15.1, gord:63.5},
+  "Malzbier": {kcal:60, prot:2, carb:14, gord:2.5},
+  "Coca-Cola Zero": {kcal:0, prot:0, carb:0, gord:0},
+  "Chá mate Leão Zero": {kcal:0, prot:0.3, carb:0.3, gord:0},
+  "Castanha de caju": {kcal:574, prot:15.3, carb:32.7, gord:46.4},
+  "Cream cheese Philadelphia Light": {kcal:210, prot:7.2, carb:3.8, gord:18}
+};
+
+// fibra por 100 g (aproximada, Tabela TACO). Alimento fora da lista vale 0.
+const FIBRA = {
+  "Arroz cozido": 1.6, "Feijão carioca cozido": 8.5, "Aveia (flocos)": 9.1,
+  "Banana": 2.0, "Banana nanica": 2.0, "Mel": 0.2,
+  "Tomate": 1.2, "Cenoura crua": 3.2, "Beterraba cozida": 2.0, "Beterraba crua": 2.8, "Alface crespa": 1.3,
+  "Mamão": 1.8, "Melão": 0.9, "Melancia": 0.4, "Tangerina": 1.8, "Mexerica morgote": 1.8,
+  "Chocolate amargo (70%)": 11, "Chocolate ao leite": 2.0, "Cocada": 2.0,
+  "Geleia de morango Chemberry": 0.5, "Pão francês": 2.3, "Pão de forma": 2.3, "Pão de bisnaguinha": 2.0,
+  "Parmalat Fit chocolate (bebida láctea)": 0.3
+};
+
+// alimentos agrupados por tipo (só para organizar a lista; os valores ficam em ALIMENTOS)
+const GRUPOS = {
+  "Grãos e cereais": ["Arroz cozido", "Feijão carioca cozido", "Aveia (flocos)", "Pão francês", "Pão de forma", "Pão de bisnaguinha"],
+  "Frutas": ["Banana", "Banana nanica", "Mamão", "Melão", "Melancia", "Mexerica morgote", "Tangerina", "Manga"],
+  "Legumes e verduras": ["Tomate", "Cenoura crua", "Beterraba cozida", "Beterraba crua", "Alface crespa", "Brócolis cru"],
+  "Carnes e ovos": ["Frango grelhado (peito)", "Ovo cozido", "Ovo cru", "Presunto", "Filé mignon bovino (cru, sem gordura)", "Patinho bovino (cru, sem gordura)"],
+  "Laticínios": ["Iogurte Danone desnatado", "Creme de ricota", "Requeijão cremoso", "Leite desnatado", "Queijo branco", "Mussarela", "Whey protein", "Parmalat Fit chocolate (bebida láctea)", "Cream cheese Philadelphia Light"],
+  "Doces": ["Mel", "Geleia de morango Chemberry", "Chocolate amargo (70%)", "Chocolate ao leite", "Bombom Alpino (ao leite)", "Bombom Ouro Branco", "Bombom Sonho de Valsa", "Cocada", "Bolo de padaria (aipim ou milho, média)"],
+  "Gorduras e temperos": ["Azeite de oliva", "Manteiga", "Óleo de soja", "Óleo de girassol", "Margarina com sal", "Castanha do Brasil crua", "Castanha de caju"],
+  "Bebidas": ["Cappuccino de máquina (café com leite)", "Malzbier", "Coca-Cola Zero", "Chá mate Leão Zero"]
+};
+// qualquer alimento novo que não esteja em um grupo cai em "Outros"
+const agrupados = Object.values(GRUPOS).flat();
+const resto = Object.keys(ALIMENTOS).filter(n => !agrupados.includes(n));
+if (resto.length) GRUPOS["Outros"] = resto;
+
+// combinações sugeridas: [alimento, gramas] por item. As porções são ajustadas ao saldo do dia.
+const COMBINACOES = [
+  // Café da manhã
+  { refeicao: "Café da manhã", nome: "Café com ovo", itens: [["Pão de forma", 50], ["Ovo cru", 100], ["Azeite de oliva", 2], ["Mamão", 100]] },
+  { refeicao: "Café da manhã", nome: "Iogurte com aveia", itens: [["Iogurte Danone desnatado", 160], ["Aveia (flocos)", 15], ["Banana nanica", 60]] },
+  { refeicao: "Café da manhã", nome: "Pão francês com requeijão e ovo", itens: [["Pão francês", 50], ["Requeijão cremoso", 20], ["Ovo cozido", 50]] },
+  // Meio da manhã
+  { refeicao: "Meio da manhã", nome: "Whey com banana", itens: [["Whey protein", 30], ["Banana nanica", 120]] },
+  { refeicao: "Meio da manhã", nome: "Whey com mamão", itens: [["Whey protein", 30], ["Mamão", 150]] },
+  { refeicao: "Meio da manhã", nome: "Whey com beterraba", itens: [["Whey protein", 30], ["Beterraba crua", 30]] },
+  { refeicao: "Meio da manhã", nome: "Parmalat Fit chocolate (1 caixinha de 250 ml)", itens: [["Parmalat Fit chocolate (bebida láctea)", 250]] },
+  // Almoço
+  { refeicao: "Almoço", nome: "Almoço leve", itens: [["Frango grelhado (peito)", 150], ["Arroz cozido", 100], ["Feijão carioca cozido", 100], ["Tomate", 50], ["Alface crespa", 30]] },
+  { refeicao: "Almoço", nome: "Arroz, feijão e ovo com legumes", itens: [["Arroz cozido", 100], ["Feijão carioca cozido", 100], ["Ovo cozido", 50], ["Cenoura crua", 60], ["Alface crespa", 30]] },
+  // Lanche
+  { refeicao: "Lanche", nome: "Pão com requeijão e presunto", itens: [["Pão de bisnaguinha", 50], ["Requeijão cremoso", 20], ["Presunto", 30]] },
+  { refeicao: "Lanche", nome: "Lanche de fruta com iogurte", itens: [["Melancia", 200], ["Iogurte Danone desnatado", 160]] },
+  { refeicao: "Lanche", nome: "Fruta com chocolate", itens: [["Tangerina", 150], ["Chocolate amargo (70%)", 10]] },
+  // Jantar
+  { refeicao: "Jantar", nome: "Jantar de ovo com legumes", itens: [["Ovo cru", 100], ["Azeite de oliva", 3], ["Cenoura crua", 80], ["Beterraba cozida", 80]] },
+  { refeicao: "Jantar", nome: "Jantar de frango com legumes", itens: [["Frango grelhado (peito)", 120], ["Cenoura crua", 80], ["Beterraba cozida", 80], ["Alface crespa", 30]] }
+];
+
+// alimentos que não são sugeridos de novo no mesmo dia depois de registrados
+// (para repetir, basta tirar da lista)
+const NAO_REPETIR = ["Iogurte Danone desnatado"];
+
+// ordem das refeições principais do dia
+const ORDEM_SUGESTAO = ["Café da manhã", "Meio da manhã", "Almoço", "Lanche", "Jantar"];
+// a próxima refeição é a primeira da ordem que ainda não tem registro hoje
+function proximaRefeicao() {
+  const reg = refeicoesDoDia(dia());
+  return ORDEM_SUGESTAO.find(r => !reg.includes(r)) || null;
+}
+
+// equivalência em unidades (aproximada), só para mostrar na aba Sugestões
+const UNIDADES = {
+  "Ovo cru":            { g: 50,  singular: "ovo",          plural: "ovos" },
+  "Ovo cozido":         { g: 50,  singular: "ovo",          plural: "ovos" },
+  "Banana":             { g: 100, singular: "banana",       plural: "bananas" },
+  "Banana nanica":      { g: 120, singular: "banana nanica", plural: "bananas nanicas" },
+  "Pão francês":        { g: 50,  singular: "pão",          plural: "pães" },
+  "Pão de bisnaguinha": { g: 25,  singular: "bisnaguinha",  plural: "bisnaguinhas" },
+  "Pão de forma":       { g: 25,  singular: "fatia",        plural: "fatias" },
+  "Tangerina":          { g: 80,  singular: "tangerina",    plural: "tangerinas" },
+  "Mexerica morgote":   { g: 100, singular: "mexerica",     plural: "mexericas" },
+  "Mussarela":          { g: 20,  singular: "fatia",        plural: "fatias" },
+  "Presunto":           { g: 20,  singular: "fatia",        plural: "fatias" },
+  "Parmalat Fit chocolate (bebida láctea)": { g: 250, singular: "caixinha", plural: "caixinhas" },
+  "Bombom Alpino (ao leite)": { g: 13, singular: "bombom", plural: "bombons" },
+  "Bombom Ouro Branco":  { g: 20,  singular: "bombom", plural: "bombons" },
+  "Bombom Sonho de Valsa": { g: 21.5, singular: "bombom", plural: "bombons" },
+  "Leite desnatado":    { g: 200, singular: "copo",         plural: "copos" }
+};
+// texto ao lado do nome na lista: quanto vale uma unidade (ex.: banana nanica ≈ 120 g)
+function rotuloUnidade(nome) {
+  const u = UNIDADES[nome];
+  return u ? ` (1 ${u.singular} ≈ ${u.g} g)` : "";
+}
+function equivalencia(nome, g) {
+  const u = UNIDADES[nome];
+  if (!u) return "";
+  const qtd = Math.round(g / u.g * 2) / 2; // arredonda para meio
+  if (qtd <= 0) return "";
+  const txt = qtd === 1 ? u.singular : u.plural;
+  const num = Number.isInteger(qtd) ? qtd : qtd.toString().replace(".", ",");
+  return ` (≈ ${num} ${txt})`;
+}
+
+const NUT = [["kcal","kcal"],["prot","Prot (g)"],["carb","Carb (g)"],["gord","Gord (g)"],["fibra","Fibra (g)"]];
+const ORDEM_REFEICOES = ["Café da manhã","Meio da manhã","Almoço","Lanche","Jantar","Outro"];
+const CHAVE = "diario_alimentar_v1";
+
+// metas em gramas (calorias da meta divididas pelo valor energético de cada nutriente)
+const kcalRestantes = META_KCAL - META_PROT_G * 4;   // calorias que sobram depois da proteína
+const somaSplit = SPLIT.carb + SPLIT.gord;
+const METAS = {
+  kcal: META_KCAL,
+  prot: META_PROT_G,
+  carb: kcalRestantes * (SPLIT.carb / somaSplit) / 4,
+  gord: kcalRestantes * (SPLIT.gord / somaSplit) / 9,
+  fibra: 25   // referência; ajustável
+};
+
+let dados = carregar();
+
+function hojeISO() {
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+function carregar() {
+  try { return JSON.parse(localStorage.getItem(CHAVE)) || {}; } catch(e) { return {}; }
+}
+function salvar() {
+  try { localStorage.setItem(CHAVE, JSON.stringify(dados)); } catch(e) {}
+}
+function dia() { return dados[hojeISO()] || (dados[hojeISO()] = []); }
+
+function calc(nome, g) {
+  const b = ALIMENTOS[nome], r = {};
+  for (const [k] of NUT) r[k] = (k === "fibra" ? (FIBRA[nome] || 0) : b[k]) * g / 100;
+  return r;
+}
+function somar(lista) {
+  const t = {kcal:0, prot:0, carb:0, gord:0, fibra:0};
+  lista.forEach(i => { for (const k in t) t[k] += (i[k] || 0); });
+  return t;
+}
+function totalHTML(t) {
+  return NUT.map(([k,l]) => `<div><b>${t[k].toFixed(k==="kcal"?0:1)}</b><span>${l}</span></div>`).join("");
+}
+
+// totais do dia com a meta de cada nutriente (verde dentro, vermelho acima)
+function totalDiaHTML(t) {
+  return NUT.map(([k,l]) => {
+    const cls = k === "fibra" ? (t[k] >= METAS[k] ? "ok" : "") : (t[k] <= METAS[k] ? "ok" : "over");
+    const meta = k === "kcal" ? `de ${METAS.kcal}` : `meta ${METAS[k].toFixed(0)}`;
+    return `<div class="${cls}"><b>${t[k].toFixed(k==="kcal"?0:1)}</b><span>${l}</span><small>${meta}</small></div>`;
+  }).join("");
+}
+
+// preenche lista de alimentos (agrupada por tipo, em ordem alfabética dentro de cada grupo)
+const sel = document.getElementById("alimento");
+sel.innerHTML = '<option value="" disabled selected>Escolha o alimento</option><optgroup label="Informar valores"><option value="__outro__">Outro (digitar os valores)</option></optgroup>' + Object.entries(GRUPOS).map(([g, nomes]) =>
+  `<optgroup label="${g}">${nomes.slice().sort((a, b) => a.localeCompare(b, "pt-BR")).map(n => `<option value="${n}">${n}${rotuloUnidade(n)}</option>`).join("")}</optgroup>`
+).join("");
+
+// base por 100 g do alimento escolhido (cadastrado ou digitado na opção "Outro")
+function baseAtual() {
+  if (sel.value === "__outro__") {
+    const porc = parseFloat(document.getElementById("outro-porcao").value);
+    if (!porc || porc <= 0) return null;
+    const f = id => (parseFloat(document.getElementById(id).value) || 0) / porc * 100;
+    return { kcal: f("outro-kcal"), prot: f("outro-prot"), carb: f("outro-carb"), gord: f("outro-gord"), fibra: f("outro-fibra") };
+  }
+  return sel.value ? { ...ALIMENTOS[sel.value], fibra: FIBRA[sel.value] || 0 } : null;
+}
+function nomeAtual() {
+  if (sel.value === "__outro__") return document.getElementById("outro-nome").value.trim() || "Outro alimento";
+  return sel.value;
+}
+function calcBase(b, g) {
+  const r = {};
+  for (const k of ["kcal", "prot", "carb", "gord", "fibra"]) r[k] = (b[k] || 0) * g / 100;
+  return r;
+}
+
+function atualizarPreview() {
+  const g = parseFloat(document.getElementById("gramas").value);
+  const p = document.getElementById("preview");
+  document.getElementById("outro-campos").style.display = sel.value === "__outro__" ? "" : "none";
+  const b = baseAtual();
+  if (!b || !g || g <= 0) { p.textContent = ""; return; }
+  const t = calcBase(b, g);
+  p.textContent = `Este item: ${t.kcal.toFixed(0)} kcal · ${t.prot.toFixed(1)} g prot · ${t.carb.toFixed(1)} g carb · ${t.gord.toFixed(1)} g gord`;
+}
+sel.addEventListener("change", atualizarPreview);
+document.getElementById("gramas").addEventListener("input", atualizarPreview);
+
+document.getElementById("add").addEventListener("click", () => {
+  const g = parseFloat(document.getElementById("gramas").value);
+  const b = baseAtual();
+  if (!b) { alert(sel.value === "__outro__" ? "Preencha a porção e os valores do rótulo." : "Escolha um alimento."); return; }
+  if (!g || g <= 0) { alert("Digite a quantidade em gramas."); return; }
+  const item = { refeicao: document.getElementById("refeicao").value,
+                 alimento: nomeAtual(), gramas: g, ...calcBase(b, g) };
+  dia().push(item);
+  salvar();
+  document.getElementById("gramas").value = "";
+  ["outro-nome", "outro-porcao", "outro-kcal", "outro-prot", "outro-carb", "outro-gord", "outro-fibra"]
+    .forEach(id => document.getElementById(id).value = "");
+  sel.value = "";
+  atualizarPreview();
+  render();
+});
+
+document.getElementById("desfazer").addEventListener("click", () => {
+  const l = dia();
+  if (!l.length) return;
+  l.pop(); salvar(); render();
+});
+
+// zerar em dois toques (não usa o aviso do navegador, que alguns celulares bloqueiam)
+let zerarPendente = false;
+document.getElementById("zerar").addEventListener("click", function () {
+  if (!zerarPendente) {
+    zerarPendente = true;
+    this.textContent = "Toque de novo para zerar";
+    setTimeout(() => { zerarPendente = false; this.textContent = "Zerar o dia"; }, 4000);
+    return;
+  }
+  zerarPendente = false;
+  this.textContent = "Zerar o dia";
+  dados[hojeISO()] = [];
+  salvar();
+  render();
+});
+
+// troca entre as abas Apontamento e Sugestões
+function mostrarVista(v) {
+  document.getElementById("vista-ap").style.display = v === "ap" ? "" : "none";
+  document.getElementById("vista-su").style.display = v === "su" ? "" : "none";
+  document.getElementById("vista-ag").style.display = v === "ag" ? "" : "none";
+  document.getElementById("vista-at").style.display = v === "at" ? "" : "none";
+  document.getElementById("t-ap").classList.toggle("ativa", v === "ap");
+  document.getElementById("t-su").classList.toggle("ativa", v === "su");
+  document.getElementById("t-ag").classList.toggle("ativa", v === "ag");
+  document.getElementById("t-at").classList.toggle("ativa", v === "at");
+  if (v === "su") { renderSugestoes(); renderMontBarras(); }
+  if (v === "ag") renderAgua();
+  if (v === "at") renderAtividade();
+}
+document.getElementById("t-ap").addEventListener("click", () => mostrarVista("ap"));
+document.getElementById("t-su").addEventListener("click", () => mostrarVista("su"));
+document.getElementById("t-ag").addEventListener("click", () => mostrarVista("ag"));
+document.getElementById("t-at").addEventListener("click", () => mostrarVista("at"));
+
+// ===== ATIVIDADE (só para mostrar; não muda a meta) =====
+const PESO_KG = 95;   // usado no cálculo do gasto
+const CHAVE_ATIV = "diario_atividade_v1";
+let ativ = carregarJSON(CHAVE_ATIV);   // { "2026-10-31": [{ km, v, kcal }] }
+
+// sempre o dia atual
+function dataAtiv() { return hojeISO(); }
+function ativDia() { const d = dataAtiv(); return ativ[d] || (ativ[d] = []); }
+
+// gasto extra (acima do repouso) pela velocidade: MET ≈ (0,1 × velocidade em m/min + 3,5) / 3,5
+function kcalExtraCaminhada(km, v) {
+  const met = (0.1 * (v * 1000 / 60) + 3.5) / 3.5;
+  const horas = km / v;
+  return (met - 1) * PESO_KG * horas;
+}
+
+function renderAtividade() {
+  const lista = ativDia();
+  document.getElementById("at-titulo").textContent = "Hoje";
+  const km = lista.reduce((a, i) => a + i.km, 0);
+  const kcal = lista.reduce((a, i) => a + i.kcal, 0);
+  document.getElementById("at-total-km").textContent = km.toFixed(2).replace(".", ",");
+  document.getElementById("at-total-kcal").textContent = kcal.toFixed(0);
+  document.getElementById("at-lista").innerHTML = lista.length
+    ? lista.map(i => `<div class="item"><span>${i.km.toFixed(2).replace(".", ",")} km a ${i.v.toString().replace(".", ",")} km/h</span><span class="small">${i.kcal.toFixed(0)} kcal</span></div>`).join("")
+    : '<div class="small">Nenhuma caminhada registrada hoje.</div>';
+}
+
+document.getElementById("at-add").addEventListener("click", () => {
+  const km = parseFloat(document.getElementById("at-km").value);
+  const v = parseFloat(document.getElementById("at-v").value);
+  if (!km || km <= 0 || !v || v <= 0) { alert("Digite a distância e a velocidade."); return; }
+  ativDia().push({ km, v, kcal: kcalExtraCaminhada(km, v) });
+  salvarJSON(CHAVE_ATIV, ativ);
+  document.getElementById("at-km").value = "";
+  renderAtividade();
+});
+document.getElementById("at-desfazer").addEventListener("click", () => {
+  const l = ativDia();
+  if (!l.length) return;
+  l.pop(); salvarJSON(CHAVE_ATIV, ativ); renderAtividade();
+});
+
+// ===== ÁGUA E COCA ZERO =====
+const CHAVE_AGUA = "diario_agua_v1";
+const CHAVE_COCA = "diario_coca_v1";
+const META_AGUA = 2000;
+const BOTOES_AGUA = [50, 100, 200, 400];
+const BOTOES_COCA = [50, 100, 200, 400];
+const COCA_ML = 400;
+const COCA_LIMITE = 1200;   // limite do dia: 3 copos
+const COCA_ESCALA = 2000;   // a barra vai até 5 copos
+
+function carregarJSON(chave) {
+  try { return JSON.parse(localStorage.getItem(chave)) || {}; } catch(e) { return {}; }
+}
+function salvarJSON(chave, obj) {
+  try { localStorage.setItem(chave, JSON.stringify(obj)); } catch(e) {}
+}
+let agua = carregarJSON(CHAVE_AGUA);   // { "2026-10-30": [50, 400, ...] } em ml
+let coca = carregarJSON(CHAVE_COCA);   // { "2026-10-30": [400, 50, ...] } em ml
+
+function aguaDia() { return agua[hojeISO()] || (agua[hojeISO()] = []); }
+// converte o formato antigo (número de copos de 400 ml) para a lista em ml
+function cocaDia() {
+  const v = coca[hojeISO()];
+  if (Array.isArray(v)) return v;
+  const lista = typeof v === "number" ? Array(v).fill(COCA_ML) : [];
+  coca[hojeISO()] = lista;
+  return lista;
+}
+
+function renderAgua() {
+  const total = aguaDia().reduce((a, b) => a + b, 0);
+  const pct = total / META_AGUA * 100;
+  const cor = total >= META_AGUA ? "var(--ok)" : "var(--acc)";
+  const fill = document.getElementById("agua-fill");
+  fill.style.width = Math.min(pct, 100).toFixed(1) + "%";
+  fill.style.background = cor;
+  document.getElementById("agua-real").innerHTML = `<b>${total}</b> de ${META_AGUA} ml`;
+  document.getElementById("agua-pct").textContent = `${pct.toFixed(0)}% da meta`;
+  document.getElementById("agua-label").textContent = `meta ${META_AGUA} ml`;
+
+  document.getElementById("botoes-agua").innerHTML =
+    BOTOES_AGUA.map(ml => `<button class="sec" data-ml="${ml}">+${ml} ml</button>`).join("");
+
+  document.getElementById("botoes-coca").innerHTML =
+    BOTOES_COCA.map(ml => `<button class="sec" data-ml="${ml}">+${ml} ml</button>`).join("");
+
+  const c = cocaDia().reduce((a, b) => a + b, 0);
+  const aviso = c > COCA_LIMITE ? " · acima do limite" : "";
+  document.getElementById("coca-real").textContent = `${c} ml hoje (limite ${COCA_LIMITE} ml)${aviso}`;
+  const cocaFill = document.getElementById("coca-fill");
+  cocaFill.style.width = Math.min(c / COCA_ESCALA * 100, 100).toFixed(1) + "%";
+  cocaFill.style.background = c > COCA_LIMITE ? "var(--over)" : "var(--ok)";
+}
+
+document.getElementById("botoes-agua").addEventListener("click", e => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  aguaDia().push(Number(b.dataset.ml));
+  salvarJSON(CHAVE_AGUA, agua);
+  renderAgua();
+});
+document.getElementById("agua-desfazer").addEventListener("click", () => {
+  const l = aguaDia();
+  if (!l.length) return;
+  l.pop(); salvarJSON(CHAVE_AGUA, agua); renderAgua();
+});
+document.getElementById("botoes-coca").addEventListener("click", e => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  cocaDia().push(Number(b.dataset.ml));
+  salvarJSON(CHAVE_COCA, coca);
+  renderAgua();
+});
+document.getElementById("coca-desfazer").addEventListener("click", () => {
+  const l = cocaDia();
+  if (!l.length) return;
+  l.pop(); salvarJSON(CHAVE_COCA, coca); renderAgua();
+});
+
+// refeições na ordem do dia; as que não estão na lista vão no fim
+function refeicoesDoDia(lista) {
+  const usadas = [];
+  lista.forEach(i => { if (!usadas.includes(i.refeicao)) usadas.push(i.refeicao); });
+  usadas.sort((a,b) => {
+    const ia = ORDEM_REFEICOES.indexOf(a), ib = ORDEM_REFEICOES.indexOf(b);
+    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+  });
+  return usadas;
+}
+
+// barra de meta: verde até a meta; passando dela, a barra fica vermelha
+function renderMeta(t) {
+  const pct = t.kcal / METAS.kcal * 100;
+  const fill = document.getElementById("meta-fill");
+  const cor = t.kcal <= METAS.kcal ? "var(--ok)" : "var(--over)";
+  fill.style.width = Math.min(pct, 100).toFixed(1) + "%";
+  fill.style.background = cor;
+  document.getElementById("meta-real").innerHTML = `<b style="color:${cor}">${t.kcal.toFixed(0)}</b> de ${METAS.kcal} kcal`;
+  document.getElementById("meta-pct").textContent = `${pct.toFixed(0)}% da meta`;
+  document.getElementById("meta-label").textContent = `meta ${METAS.kcal} kcal`;
+}
+
+function renderGrafico(lista, ordem) {
+  const cont = document.getElementById("grafico");
+  if (!lista.length) { cont.textContent = "Nada registrado hoje ainda."; return; }
+  const totalDia = somar(lista).kcal || 1;
+  cont.innerHTML = ordem.map(ref => {
+    const t = somar(lista.filter(i => i.refeicao === ref));
+    const kP = t.prot * 4, kC = t.carb * 4, kG = t.gord * 9;
+    const soma = (kP + kC + kG) || 1;
+    const largura = Math.max(4, t.kcal / totalDia * 100);
+    const seg = (v) => (v / soma * 100).toFixed(1) + "%";
+    return `<div class="bar-row">
+      <div class="bar-head"><span>${ref}</span><span>${t.kcal.toFixed(0)} kcal (${(t.kcal/totalDia*100).toFixed(0)}%)</span></div>
+      <div class="bar-track" style="width:${largura.toFixed(1)}%;max-width:100%">
+        <div class="seg" style="width:${seg(kP)};background:var(--prot)"></div>
+        <div class="seg" style="width:${seg(kC)};background:var(--carb)"></div>
+        <div class="seg" style="width:${seg(kG)};background:var(--gord)"></div>
+      </div>
+      <div class="bar-macros">${t.prot.toFixed(1)} g prot · ${t.carb.toFixed(1)} g carb · ${t.gord.toFixed(1)} g gord</div>
+    </div>`;
+  }).join("");
+}
+
+// abas: uma por refeição registrada; mostra só a aba escolhida
+let abaAtiva = null;
+function renderAbas(lista, ordem) {
+  const abas = document.getElementById("abas");
+  const cont = document.getElementById("refeicoes");
+  if (!lista.length) {
+    abas.innerHTML = "";
+    cont.textContent = "Nada registrado hoje ainda.";
+    return;
+  }
+  if (!ordem.includes(abaAtiva)) abaAtiva = ordem[0];
+
+  abas.innerHTML = ordem.map(ref =>
+    `<button class="tab ${ref === abaAtiva ? "ativa" : ""}" data-ref="${ref}">${ref}</button>`
+  ).join("");
+  abas.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => {
+    abaAtiva = b.dataset.ref;
+    renderAbas(dia(), refeicoesDoDia(dia()));
+  }));
+
+  const itens = lista.filter(i => i.refeicao === abaAtiva);
+  const linhas = itens.map(i => `<div class="item"><span>${i.gramas} g de ${i.alimento}</span><span class="small">${i.kcal.toFixed(0)} kcal</span></div>`).join("");
+  cont.innerHTML = `${linhas}<div class="tot">${totalHTML(somar(itens))}</div>`;
+}
+
+// ===== SUGESTÕES =====
+function restanteDoDia() {
+  const t = somar(dia());
+  return {
+    kcal: METAS.kcal - t.kcal,
+    prot: METAS.prot - t.prot,
+    carb: METAS.carb - t.carb,
+    gord: METAS.gord - t.gord,
+    fibra: METAS.fibra - t.fibra
+  };
+}
+
+function renderSugestoes() {
+  const rem = restanteDoDia();
+
+  // quanto ainda cabe, em cada nutriente
+  document.getElementById("restante").innerHTML = NUT.map(([k,l]) => {
+    const v = Math.max(0, rem[k]);
+    return `<div><b>${v.toFixed(k==="kcal"?0:1)}</b><span>${l} ${rem[k] < 0 ? "(passou)" : "restante"}</span></div>`;
+  }).join("");
+
+  const cont = document.getElementById("sugestoes");
+  if (rem.kcal <= 0) {
+    cont.innerHTML = `<div class="small">Você já chegou na meta de calorias de hoje. Não há sugestões.</div>`;
+    return;
+  }
+
+  // para cada combinação, reduz as porções para caber no restante de kcal, carboidrato e gordura
+  const proxima = proximaRefeicao();
+  if (!proxima) {
+    cont.innerHTML = `<div class="small">Todas as refeições principais de hoje já foram registradas.</div>`;
+    return;
+  }
+  const jaComidos = dia().map(i => i.alimento);
+  const opcoes = COMBINACOES
+    .filter(c => c.refeicao === proxima)
+    .filter(c => !c.itens.some(([n]) => NAO_REPETIR.includes(n) && jaComidos.includes(n)))
+    .map(c => {
+    const bruto = somar(c.itens.map(([n, g]) => calc(n, g)));
+    let s = 1;
+    for (const k of ["kcal", "carb", "gord"]) {
+      if (bruto[k] > 0) s = Math.min(s, Math.max(0, rem[k]) / bruto[k]);
+    }
+    const itens = c.itens.map(([n, g]) => [n, Math.round(g * s)]).filter(([, g]) => g > 0);
+    const fin = somar(itens.map(([n, g]) => calc(n, g)));
+    return { nome: c.nome, itens, fin, s };
+  })
+  .filter(o => o.itens.length && o.s >= 0.3 && o.fin.prot >= 10)   // cabe com pelo menos 30% das porções e tem pelo menos 10 g de proteína
+  .sort((a, b) => b.fin.prot - a.fin.prot);
+
+  if (!opcoes.length) {
+    cont.innerHTML = `<div class="small">Nenhuma opção cabe agora. Pode ser que o restante do dia seja pequeno, ou que as opções tenham iogurte, que você já registrou hoje.</div>`;
+    return;
+  }
+
+  const o0 = opcoes[sugIdx % opcoes.length];
+  cont.innerHTML = [o0].map(o => {
+    const nota = o.s >= 0.999 ? "cabe inteiro" : `porções ajustadas para ${(o.s*100).toFixed(0)}%`;
+    const linhas = o.itens.map(([n, g]) => `<div class="sug-linha"><span>${g} g de ${n}${equivalencia(n, g)}</span><span class="small">${calc(n,g).kcal.toFixed(0)} kcal</span></div>`).join("");
+    return `<div class="card">
+      <h2>${o.nome}</h2>
+      <div class="small" style="margin-bottom:6px">${nota}</div>
+      ${linhas}
+      <div class="tot">${totalHTML(o.fin)}</div>
+    </div>`;
+  }).join("") + (opcoes.length > 1 ? '<button class="sec" id="sug-trocar" style="width:100%">Trocar sugestão</button>' : "");
+  const bt = document.getElementById("sug-trocar");
+  if (bt) bt.onclick = () => { sugIdx++; renderSugestoes(); };
+}
+
+// ===== MONTAR REFEIÇÃO =====
+let sugIdx = 0;
+let montItens = [];   // [{ alimento, gramas }]
+
+function opcoesAlimentos(selecionado) {
+  return '<option value="">Escolha o alimento</option>' + Object.entries(GRUPOS).map(([g, nomes]) =>
+    `<optgroup label="${g}">${nomes.slice().sort((a, b) => a.localeCompare(b, "pt-BR")).map(n =>
+      `<option value="${n}" ${n === selecionado ? "selected" : ""}>${n}</option>`).join("")}</optgroup>`
+  ).join("");
+}
+
+function renderMontagem() {
+  const cont = document.getElementById("montagem");
+  cont.innerHTML = montItens.map((it, idx) => `
+    <div class="mont-linha">
+      <select class="mont-sel" data-idx="${idx}">${opcoesAlimentos(it.alimento)}</select>
+      <input type="number" inputmode="decimal" class="mont-g" data-idx="${idx}" value="${it.gramas || ""}" placeholder="g">
+      <button class="sec mont-del" data-idx="${idx}" style="padding:8px 10px">×</button>
+    </div>`).join("") || '<div class="small">Nenhum alimento ainda. Toque em "+ Adicionar alimento".</div>';
+  renderMontBarras();
+}
+
+function renderMontBarras() {
+  const rem = restanteDoDia();
+  const m = somar(montItens.filter(i => i.alimento && i.gramas > 0).map(i => calc(i.alimento, i.gramas)));
+  const linhas = [["kcal", "kcal", "var(--txt)"], ["prot", "Proteína", "var(--prot)"], ["carb", "Carboidrato", "var(--carb)"], ["gord", "Gordura", "var(--gord)"], ["fibra", "Fibra", "#16a34a"]];
+  document.getElementById("mont-barras").innerHTML = linhas.map(([k, l, cor]) => {
+    const alvo = Math.max(0, rem[k]);
+    const pct = alvo > 0 ? m[k] / alvo * 100 : 0;
+    const passou = alvo > 0 && m[k] > alvo;
+    const d = k === "kcal" ? 0 : 1;
+    return `<div class="mbar">
+      <div class="mbar-head"><span>${l}</span><span>${m[k].toFixed(d)} de ${alvo.toFixed(d)}</span></div>
+      <div class="mbar-track"><div class="mbar-fill" style="width:${Math.min(pct, 100).toFixed(1)}%;background:${passou ? "var(--over)" : cor}"></div></div>
+    </div>`;
+  }).join("");
+}
+
+const montCont = document.getElementById("montagem");
+montCont.addEventListener("change", e => {
+  if (e.target.classList.contains("mont-sel")) { montItens[e.target.dataset.idx].alimento = e.target.value; renderMontBarras(); }
+});
+montCont.addEventListener("input", e => {
+  if (e.target.classList.contains("mont-g")) { montItens[e.target.dataset.idx].gramas = parseFloat(e.target.value) || 0; renderMontBarras(); }
+});
+montCont.addEventListener("click", e => {
+  const b = e.target.closest(".mont-del");
+  if (b) { montItens.splice(Number(b.dataset.idx), 1); renderMontagem(); }
+});
+document.getElementById("mont-add").addEventListener("click", () => {
+  montItens.push({ alimento: "", gramas: 0 });
+  renderMontagem();
+});
+document.getElementById("mont-registrar").addEventListener("click", () => {
+  const prox = proximaRefeicao();
+  if (!prox) { alert("Todas as refeições principais de hoje já foram registradas."); return; }
+  const validos = montItens.filter(i => i.alimento && i.gramas > 0);
+  if (!validos.length) { alert("Adicione pelo menos um alimento com gramas."); return; }
+  validos.forEach(i => dia().push({ refeicao: prox, alimento: i.alimento, gramas: i.gramas, ...calc(i.alimento, i.gramas) }));
+  salvar();
+  montItens = [];
+  renderMontagem();
+  render();
+});
+
+function render() {
+  const lista = dia();
+  const total = somar(lista);
+  renderMeta(total);
+  document.getElementById("total-dia").innerHTML = totalDiaHTML(total);
+
+  const ordem = refeicoesDoDia(lista);
+  renderGrafico(lista, ordem);
+  renderAbas(lista, ordem);
+  if (document.getElementById("vista-su").style.display !== "none") { renderSugestoes(); renderMontBarras(); }
+}
+
+renderMontagem();
+render();
+
+// ===== ESCOLHER VÁRIOS ALIMENTOS PELA ROSCA =====
+const ROTULO_ROSCA = {
+  "Grãos e cereais": ["Grãos e", "cereais"], "Frutas": ["Frutas"], "Legumes e verduras": ["Legumes e", "verduras"],
+  "Carnes e ovos": ["Carnes e", "ovos"], "Laticínios": ["Laticínios"], "Doces": ["Doces"],
+  "Gorduras e temperos": ["Gorduras e", "temperos"], "Bebidas": ["Bebidas"], "Outros": ["Outros"]
+};
+const CORES_ROSCA = {
+  "Grãos e cereais": "#eab308", "Frutas": "#f97316", "Legumes e verduras": "#22c55e", "Carnes e ovos": "#ef4444",
+  "Laticínios": "#3b82f6", "Doces": "#ec4899", "Gorduras e temperos": "#64748b", "Bebidas": "#14b8a6", "Outros": "#94a3b8"
+};
+let roscaSel = 0;
+const marcados = {};   // nome do alimento -> gramas digitadas (presença = marcado)
+
+function roscaContador() {
+  const n = Object.values(marcados).filter(v => parseFloat(v) > 0).length;
+  document.getElementById("rosca-cont").textContent = `${n} selecionado(s) com gramas`;
+}
+
+function roscaDesenhar() {
+  const svg = document.getElementById("rosca");
+  const grupos = Object.entries(GRUPOS);
+  const total = grupos.reduce((a, [, itens]) => a + itens.length, 0);
+  const R = 100, CX = 230, CY = 200, STROKE = 46, RL = 150, C = 2 * Math.PI * R, GAP = 2;
+  let acc = 0, fatias = "", textos = "";
+  grupos.forEach(([nome, itens], i) => {
+    const len = C * itens.length / total;
+    const ativo = i === roscaSel;
+    fatias += `<circle data-i="${i}" cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${CORES_ROSCA[nome] || "#94a3b8"}"
+      stroke-width="${ativo ? STROKE + 8 : STROKE}" stroke-dasharray="${Math.max(len - GAP, 0)} ${C}"
+      stroke-dashoffset="${-acc}" transform="rotate(-90 ${CX} ${CY})" style="cursor:pointer;transition:stroke-width .15s"/>`;
+    const meio = (acc + len / 2) / C * 2 * Math.PI - Math.PI / 2;
+    const x = CX + RL * Math.cos(meio), y = CY + RL * Math.sin(meio), cos = Math.cos(meio);
+    const anchor = cos > 0.25 ? "start" : cos < -0.25 ? "end" : "middle";
+    const linhas = ROTULO_ROSCA[nome] || [nome];
+    const tspans = linhas.map((t, k) =>
+      `<tspan x="${x.toFixed(1)}" dy="${k === 0 ? -(linhas.length - 1) * 8 : 16}">${t}</tspan>`).join("");
+    textos += `<text data-i="${i}" x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${anchor}"
+      dominant-baseline="middle" class="${ativo ? "ativo" : ""}">${tspans}</text>`;
+    acc += len;
+  });
+  svg.innerHTML = fatias + textos;
+  svg.querySelectorAll("[data-i]").forEach(el =>
+    el.addEventListener("click", () => { roscaSel = Number(el.dataset.i); roscaAtualizar(); }));
+}
+
+// texto com os valores do que foi digitado em gramas (vazio se não houver gramas)
+function roscaValores(n, g) {
+  if (!(g > 0)) return "";
+  const r = calc(n, g);
+  const f = (v, d = 1) => v.toFixed(d).replace(".", ",");
+  return `P ${f(r.prot)} g · C ${f(r.carb)} g · G ${f(r.gord)} g · ${Math.round(r.kcal)} kcal`;
+}
+
+function roscaLista() {
+  const [nome, itens] = Object.entries(GRUPOS)[roscaSel];
+  document.getElementById("rosca-lista").innerHTML =
+    `<div class="rosca-titulo">${nome}</div>` +
+    itens.slice().sort((a, b) => a.localeCompare(b, "pt-BR")).map(n => {
+      const marcado = n in marcados;
+      const g = marcados[n] || "";
+      return `<div class="rosca-item">
+        <label><input type="checkbox" data-n="${n}" ${marcado ? "checked" : ""}> <span>${n}</span></label>
+        <input type="number" inputmode="decimal" placeholder="g" data-g="${n}" value="${g}">
+        <div class="rosca-val" data-v="${n}">${roscaValores(n, parseFloat(g))}</div>
+      </div>`;
+    }).join("");
+}
+
+function roscaAtualizar() { roscaDesenhar(); roscaLista(); roscaContador(); }
+
+const roscaLst = document.getElementById("rosca-lista");
+roscaLst.addEventListener("change", e => {
+  const cb = e.target;
+  if (cb.type !== "checkbox") return;
+  const n = cb.dataset.n;
+  if (cb.checked) marcados[n] = marcados[n] || "";
+  else delete marcados[n];
+  roscaContador();
+});
+roscaLst.addEventListener("input", e => {
+  const inp = e.target;
+  if (inp.type !== "number") return;
+  const n = inp.dataset.g;
+  marcados[n] = inp.value;
+  const cb = roscaLst.querySelector(`input[type=checkbox][data-n="${n}"]`);
+  if (cb) cb.checked = true;
+  const val = roscaLst.querySelector(`[data-v="${n}"]`);
+  if (val) val.textContent = roscaValores(n, parseFloat(inp.value));
+  roscaContador();
+});
+
+document.getElementById("rosca-add").addEventListener("click", () => {
+  const refeicao = document.getElementById("rosca-refeicao").value;
+  const itens = Object.entries(marcados).map(([n, v]) => [n, parseFloat(v)]).filter(([, g]) => g > 0);
+  if (!itens.length) { alert("Marque os alimentos e digite a quantidade em gramas."); return; }
+  itens.forEach(([n, g]) => dia().push({ refeicao, alimento: n, gramas: g, ...calc(n, g) }));
+  salvar();
+  Object.keys(marcados).forEach(k => delete marcados[k]);
+  render();
+  roscaAtualizar();
+  document.getElementById("modal").hidden = true;
+  window.scrollTo(0, 0);
+});
+
+roscaAtualizar();
+
+// abrir e fechar a tela de escolha de alimentos
+// a refeição da tela de escolha é a última que você usou (não a "próxima" sugerida)
+let ultimaRefeicao = "Café da manhã";
+function atualizarBotaoRefeicao() {
+  document.getElementById("rosca-add").textContent = `Adicionar à refeição: ${ultimaRefeicao}`;
+}
+document.getElementById("rosca-refeicao").addEventListener("change", e => {
+  ultimaRefeicao = e.target.value;
+  atualizarBotaoRefeicao();
+});
+document.getElementById("abrir-modal").addEventListener("click", () => {
+  document.getElementById("rosca-refeicao").value = ultimaRefeicao;
+  atualizarBotaoRefeicao();
+  document.getElementById("modal").hidden = false;
+  window.scrollTo(0, 0);
+  roscaAtualizar();
+});
+document.getElementById("modal-fechar").addEventListener("click", () => {
+  document.getElementById("modal").hidden = true;
+  window.scrollTo(0, 0);
+});
+document.getElementById("toggle-avulso").addEventListener("click", () => {
+  const a = document.getElementById("avulso");
+  a.hidden = !a.hidden;
+});
+</script>
+</body>
+</html>
