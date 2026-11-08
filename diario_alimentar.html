@@ -91,7 +91,7 @@
   .modal { position:fixed; inset:0; z-index:100; overflow:auto; background:var(--bg); padding:12px; }
   /* rosca para escolher vários alimentos */
   #rosca { width:100%; max-width:360px; display:block; margin:0 auto; overflow:visible; }
-  #rosca text { cursor:pointer; font-size:15px; fill:var(--txt); font-family:system-ui, sans-serif; }
+  #rosca text { cursor:pointer; font-size:18px; fill:var(--txt); font-family:system-ui, sans-serif; }
   #rosca text.ativo { font-weight:700; }
   .rosca-titulo { font-weight:600; font-size:15px; margin:10px 0 2px; }
   .rosca-item { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 0; border-bottom:1px solid var(--line); font-size:14px; }
@@ -128,11 +128,11 @@
         <option>Café da manhã</option><option>Meio da manhã</option><option>Almoço</option><option>Lanche</option><option>Jantar</option><option>Outro</option>
       </select>
     </div>
-    <div><label>Alimento</label>
+    <div hidden><label>Alimento</label>
       <select id="alimento"></select>
     </div>
   </div>
-  <div id="outro-campos" style="display:none;background:var(--bg);border-radius:8px;padding:8px;margin-bottom:8px">
+  <div id="outro-campos" style="background:var(--bg);border-radius:8px;padding:8px;margin-bottom:8px">
     <label>Nome (ex.: Marmita de abobrinha com soja)</label>
     <input id="outro-nome" type="text" placeholder="nome do alimento">
     <label>Valores do rótulo, por porção</label>
@@ -306,7 +306,7 @@ const ALIMENTOS = {
   "Banana nanica":       {kcal:92,  prot:1.4,  carb:23.8, gord:0.1},
   "Mel":                 {kcal:304, prot:0.3,  carb:82.4, gord:0},
   "Ovo cozido":          {kcal:146, prot:13.3, carb:0.6,  gord:9.5},
-  "Frango grelhado (peito)": {kcal:159, prot:32, carb:0, gord:2.5},
+  "Frango grelhado (peito)": {kcal:159, prot:26.5, carb:0, gord:2.5},
   "Queijo branco":       {kcal:264, prot:18,   carb:3,    gord:20},
   "Tomate":              {kcal:15,  prot:1.1,  carb:3.1,  gord:0.2},
   "Cenoura crua":        {kcal:34,  prot:1.3,  carb:7.7,  gord:0.2},
@@ -352,7 +352,9 @@ const ALIMENTOS = {
   "Coca-Cola Zero": {kcal:0, prot:0, carb:0, gord:0},
   "Chá mate Leão Zero": {kcal:0, prot:0.3, carb:0.3, gord:0},
   "Castanha de caju": {kcal:574, prot:15.3, carb:32.7, gord:46.4},
-  "Cream cheese Philadelphia Light": {kcal:210, prot:7.2, carb:3.8, gord:18}
+  "Cream cheese Philadelphia Light": {kcal:210, prot:7.2, carb:3.8, gord:18},
+  "Parmalat Fit chocolate 15 g de proteína (bebida láctea)": {kcal:54, prot:6.2, carb:5.1, gord:1},
+  "Whey Nutraforce": {kcal:400, prot:70, carb:16, gord:6.7}
 };
 
 // fibra por 100 g (aproximada, Tabela TACO). Alimento fora da lista vale 0.
@@ -372,7 +374,7 @@ const GRUPOS = {
   "Frutas": ["Banana", "Banana nanica", "Mamão", "Melão", "Melancia", "Mexerica morgote", "Tangerina", "Manga"],
   "Legumes e verduras": ["Tomate", "Cenoura crua", "Beterraba cozida", "Beterraba crua", "Alface crespa", "Brócolis cru"],
   "Carnes e ovos": ["Frango grelhado (peito)", "Ovo cozido", "Ovo cru", "Presunto", "Filé mignon bovino (cru, sem gordura)", "Patinho bovino (cru, sem gordura)"],
-  "Laticínios": ["Iogurte Danone desnatado", "Creme de ricota", "Requeijão cremoso", "Leite desnatado", "Queijo branco", "Mussarela", "Whey protein", "Parmalat Fit chocolate (bebida láctea)", "Cream cheese Philadelphia Light"],
+  "Laticínios": ["Iogurte Danone desnatado", "Creme de ricota", "Requeijão cremoso", "Leite desnatado", "Queijo branco", "Mussarela", "Whey protein", "Parmalat Fit chocolate (bebida láctea)", "Parmalat Fit chocolate 15 g de proteína (bebida láctea)", "Cream cheese Philadelphia Light", "Whey Nutraforce"],
   "Doces": ["Mel", "Geleia de morango Chemberry", "Chocolate amargo (70%)", "Chocolate ao leite", "Bombom Alpino (ao leite)", "Bombom Ouro Branco", "Bombom Sonho de Valsa", "Cocada", "Bolo de padaria (aipim ou milho, média)"],
   "Gorduras e temperos": ["Azeite de oliva", "Manteiga", "Óleo de soja", "Óleo de girassol", "Margarina com sal", "Castanha do Brasil crua", "Castanha de caju"],
   "Bebidas": ["Cappuccino de máquina (café com leite)", "Malzbier", "Coca-Cola Zero", "Chá mate Leão Zero"]
@@ -482,7 +484,7 @@ function dia() { return dados[hojeISO()] || (dados[hojeISO()] = []); }
 
 function calc(nome, g) {
   const b = ALIMENTOS[nome], r = {};
-  for (const [k] of NUT) r[k] = (k === "fibra" ? (FIBRA[nome] || 0) : b[k]) * g / 100;
+  for (const [k] of NUT) r[k] = (k === "fibra" ? (FIBRA[nome] || 0) : (b[k] || 0)) * g / 100;
   return r;
 }
 function somar(lista) {
@@ -539,6 +541,8 @@ function atualizarPreview() {
   p.textContent = `Este item: ${t.kcal.toFixed(0)} kcal · ${t.prot.toFixed(1)} g prot · ${t.carb.toFixed(1)} g carb · ${t.gord.toFixed(1)} g gord`;
 }
 sel.addEventListener("change", atualizarPreview);
+sel.value = "__outro__";
+atualizarPreview();
 document.getElementById("gramas").addEventListener("input", atualizarPreview);
 
 document.getElementById("add").addEventListener("click", () => {
@@ -553,7 +557,7 @@ document.getElementById("add").addEventListener("click", () => {
   document.getElementById("gramas").value = "";
   ["outro-nome", "outro-porcao", "outro-kcal", "outro-prot", "outro-carb", "outro-gord", "outro-fibra"]
     .forEach(id => document.getElementById(id).value = "");
-  sel.value = "";
+  sel.value = "__outro__";
   atualizarPreview();
   render();
 });
@@ -959,31 +963,33 @@ function roscaContador() {
   document.getElementById("rosca-cont").textContent = `${n} selecionado(s) com gramas`;
 }
 
+const EMOJI = {"Grãos e cereais":"🌾","Frutas":"🍎","Legumes e verduras":"🥦","Carnes e ovos":"🥩","Laticínios":"🐄","Doces":"🍫","Gorduras e temperos":"🫒","Bebidas":"☕"};
 function roscaDesenhar() {
   const svg = document.getElementById("rosca");
-  const grupos = Object.entries(GRUPOS);
-  const total = grupos.reduce((a, [, itens]) => a + itens.length, 0);
-  const R = 100, CX = 230, CY = 200, STROKE = 46, RL = 150, C = 2 * Math.PI * R, GAP = 2;
-  let acc = 0, fatias = "", textos = "";
-  grupos.forEach(([nome, itens], i) => {
-    const len = C * itens.length / total;
+  const R = 100, CX = 230, CY = 200, STROKE = 56, RL = 150, C = 2 * Math.PI * R;
+  const grupos = Object.entries(GRUPOS).map(([nome, itens]) => ({nome, itens}));
+  const total = grupos.reduce((a, g) => a + g.itens.length, 0);
+  let acc = 0, fatias = "", separadores = "", textos = "";
+  grupos.forEach((g, i) => {
+    const len = C * g.itens.length / total;
     const ativo = i === roscaSel;
-    fatias += `<circle data-i="${i}" cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${CORES_ROSCA[nome] || "#94a3b8"}"
-      stroke-width="${ativo ? STROKE + 8 : STROKE}" stroke-dasharray="${Math.max(len - GAP, 0)} ${C}"
-      stroke-dashoffset="${-acc}" transform="rotate(-90 ${CX} ${CY})" style="cursor:pointer;transition:stroke-width .15s"/>`;
+    fatias += `<circle data-i="${i}" cx="${CX}" cy="${CY}" r="${R}" fill="none" style="stroke:${ativo ? "#bfdbfe" : "var(--line)"};cursor:pointer" stroke-width="${STROKE}" stroke-dasharray="${len} ${C}" stroke-dashoffset="${-acc}" transform="rotate(-90 ${CX} ${CY})"/>`;
+    const a0 = acc / C * 2 * Math.PI - Math.PI / 2;
+    const r1 = R - STROKE / 2, r2 = R + STROKE / 2;
+    separadores += `<line x1="${(CX + r1 * Math.cos(a0)).toFixed(1)}" y1="${(CY + r1 * Math.sin(a0)).toFixed(1)}" x2="${(CX + r2 * Math.cos(a0)).toFixed(1)}" y2="${(CY + r2 * Math.sin(a0)).toFixed(1)}" style="stroke:var(--line)" stroke-width="2"/>`;
     const meio = (acc + len / 2) / C * 2 * Math.PI - Math.PI / 2;
+    textos += `<text data-i="${i}" x="${(CX + R * Math.cos(meio)).toFixed(1)}" y="${(CY + R * Math.sin(meio)).toFixed(1)}" text-anchor="middle" dominant-baseline="central" style="font-size:26px;cursor:pointer">${EMOJI[g.nome] || "•"}</text>`;
     const x = CX + RL * Math.cos(meio), y = CY + RL * Math.sin(meio), cos = Math.cos(meio);
     const anchor = cos > 0.25 ? "start" : cos < -0.25 ? "end" : "middle";
-    const linhas = ROTULO_ROSCA[nome] || [nome];
-    const tspans = linhas.map((t, k) =>
-      `<tspan x="${x.toFixed(1)}" dy="${k === 0 ? -(linhas.length - 1) * 8 : 16}">${t}</tspan>`).join("");
-    textos += `<text data-i="${i}" x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${anchor}"
-      dominant-baseline="middle" class="${ativo ? "ativo" : ""}">${tspans}</text>`;
+    const linhas = ROTULO_ROSCA[g.nome] || [g.nome];
+    const tspans = linhas.map((t, k) => `<tspan x="${x.toFixed(1)}" dy="${k === 0 ? -(linhas.length - 1) * 8 : 16}">${t}</tspan>`).join("");
+    textos += `<text data-i="${i}" x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${anchor}" dominant-baseline="middle" class="${ativo ? "ativo" : ""}">${tspans}</text>`;
     acc += len;
   });
-  svg.innerHTML = fatias + textos;
-  svg.querySelectorAll("[data-i]").forEach(el =>
-    el.addEventListener("click", () => { roscaSel = Number(el.dataset.i); roscaAtualizar(); }));
+  const borda = [R + STROKE / 2, R - STROKE / 2].map(rr =>
+    `<circle cx="${CX}" cy="${CY}" r="${rr}" fill="none" style="stroke:var(--line)" stroke-width="2"/>`).join("");
+  svg.innerHTML = fatias + borda + separadores + textos;
+  svg.querySelectorAll("[data-i]").forEach(el => el.addEventListener("click", () => { roscaSel = Number(el.dataset.i); roscaAtualizar(); }));
 }
 
 // texto com os valores do que foi digitado em gramas (vazio se não houver gramas)
