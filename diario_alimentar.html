@@ -344,6 +344,7 @@ const ALIMENTOS = {
   "Cappuccino de máquina (café com leite)": {kcal:31.4, prot:1.7, carb:2.6, gord:1.7},
   "Bolo de padaria (aipim ou milho, média)": {kcal:317.5, prot:4.6, carb:46.5, gord:12.6},
   "Manga": {kcal:65, prot:0.5, carb:17, gord:0.3},
+  "Maçã": {kcal:56, prot:0.3, carb:15.2, gord:0.2},
   "Óleo de soja": {kcal:884, prot:0, carb:0, gord:100},
   "Óleo de girassol": {kcal:884, prot:0, carb:0, gord:100},
   "Margarina com sal": {kcal:594, prot:0, carb:0, gord:67.2},
@@ -354,7 +355,8 @@ const ALIMENTOS = {
   "Castanha de caju": {kcal:574, prot:15.3, carb:32.7, gord:46.4},
   "Cream cheese Philadelphia Light": {kcal:210, prot:7.2, carb:3.8, gord:18},
   "Parmalat Fit chocolate 15 g de proteína (bebida láctea)": {kcal:54, prot:6.2, carb:5.1, gord:1},
-  "Whey Nutraforce": {kcal:400, prot:70, carb:16, gord:6.7}
+  "Whey Nutraforce": {kcal:400, prot:70, carb:16, gord:6.7},
+  "Água de coco Sococo": {kcal:20, prot:0, carb:5, gord:0}
 };
 
 // fibra por 100 g (aproximada, Tabela TACO). Alimento fora da lista vale 0.
@@ -362,7 +364,7 @@ const FIBRA = {
   "Arroz cozido": 1.6, "Feijão carioca cozido": 8.5, "Aveia (flocos)": 9.1,
   "Banana": 2.0, "Banana nanica": 2.0, "Mel": 0.2,
   "Tomate": 1.2, "Cenoura crua": 3.2, "Beterraba cozida": 2.0, "Beterraba crua": 2.8, "Alface crespa": 1.3,
-  "Mamão": 1.8, "Melão": 0.9, "Melancia": 0.4, "Tangerina": 1.8, "Mexerica morgote": 1.8,
+  "Mamão": 1.8, "Maçã": 1.3, "Melão": 0.9, "Melancia": 0.4, "Tangerina": 1.8, "Mexerica morgote": 1.8,
   "Chocolate amargo (70%)": 11, "Chocolate ao leite": 2.0, "Cocada": 2.0,
   "Geleia de morango Chemberry": 0.5, "Pão francês": 2.3, "Pão de forma": 2.3, "Pão de bisnaguinha": 2.0,
   "Parmalat Fit chocolate (bebida láctea)": 0.3
@@ -371,13 +373,13 @@ const FIBRA = {
 // alimentos agrupados por tipo (só para organizar a lista; os valores ficam em ALIMENTOS)
 const GRUPOS = {
   "Grãos e cereais": ["Arroz cozido", "Feijão carioca cozido", "Aveia (flocos)", "Pão francês", "Pão de forma", "Pão de bisnaguinha"],
-  "Frutas": ["Banana", "Banana nanica", "Mamão", "Melão", "Melancia", "Mexerica morgote", "Tangerina", "Manga"],
+  "Frutas": ["Banana", "Banana nanica", "Mamão", "Melão", "Melancia", "Mexerica morgote", "Tangerina", "Manga", "Maçã"],
   "Legumes e verduras": ["Tomate", "Cenoura crua", "Beterraba cozida", "Beterraba crua", "Alface crespa", "Brócolis cru"],
   "Carnes e ovos": ["Frango grelhado (peito)", "Ovo cozido", "Ovo cru", "Presunto", "Filé mignon bovino (cru, sem gordura)", "Patinho bovino (cru, sem gordura)"],
   "Laticínios": ["Iogurte Danone desnatado", "Creme de ricota", "Requeijão cremoso", "Leite desnatado", "Queijo branco", "Mussarela", "Whey protein", "Parmalat Fit chocolate (bebida láctea)", "Parmalat Fit chocolate 15 g de proteína (bebida láctea)", "Cream cheese Philadelphia Light", "Whey Nutraforce"],
   "Doces": ["Mel", "Geleia de morango Chemberry", "Chocolate amargo (70%)", "Chocolate ao leite", "Bombom Alpino (ao leite)", "Bombom Ouro Branco", "Bombom Sonho de Valsa", "Cocada", "Bolo de padaria (aipim ou milho, média)"],
   "Gorduras e temperos": ["Azeite de oliva", "Manteiga", "Óleo de soja", "Óleo de girassol", "Margarina com sal", "Castanha do Brasil crua", "Castanha de caju"],
-  "Bebidas": ["Cappuccino de máquina (café com leite)", "Malzbier", "Coca-Cola Zero", "Chá mate Leão Zero"]
+  "Bebidas": ["Cappuccino de máquina (café com leite)", "Malzbier", "Coca-Cola Zero", "Chá mate Leão Zero", "Água de coco Sococo"]
 };
 // qualquer alimento novo que não esteja em um grupo cai em "Outros"
 const agrupados = Object.values(GRUPOS).flat();
@@ -436,7 +438,8 @@ const UNIDADES = {
   "Bombom Alpino (ao leite)": { g: 13, singular: "bombom", plural: "bombons" },
   "Bombom Ouro Branco":  { g: 20,  singular: "bombom", plural: "bombons" },
   "Bombom Sonho de Valsa": { g: 21.5, singular: "bombom", plural: "bombons" },
-  "Leite desnatado":    { g: 200, singular: "copo",         plural: "copos" }
+  "Leite desnatado":    { g: 200, singular: "copo",         plural: "copos" },
+  "Maçã":               { g: 130, singular: "maçã",         plural: "maçãs" }
 };
 // texto ao lado do nome na lista: quanto vale uma unidade (ex.: banana nanica ≈ 120 g)
 function rotuloUnidade(nome) {
@@ -1008,7 +1011,7 @@ function roscaLista() {
       const marcado = n in marcados;
       const g = marcados[n] || "";
       return `<div class="rosca-item">
-        <label><input type="checkbox" data-n="${n}" ${marcado ? "checked" : ""}> <span>${n}</span></label>
+        <label><input type="checkbox" data-n="${n}" ${marcado ? "checked" : ""}> <span>${n}${rotuloUnidade(n)}</span></label>
         <input type="number" inputmode="decimal" placeholder="g" data-g="${n}" value="${g}">
         <div class="rosca-val" data-v="${n}">${roscaValores(n, parseFloat(g))}</div>
       </div>`;
