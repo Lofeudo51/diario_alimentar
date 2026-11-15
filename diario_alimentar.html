@@ -345,6 +345,9 @@ const ALIMENTOS = {
   "Bolo de padaria (aipim ou milho, média)": {kcal:317.5, prot:4.6, carb:46.5, gord:12.6},
   "Manga": {kcal:65, prot:0.5, carb:17, gord:0.3},
   "Maçã": {kcal:56, prot:0.3, carb:15.2, gord:0.2},
+  "Biscoito Lev Magic Toast": {kcal:356, prot:9.9, carb:75, gord:1.8},
+  "Doce de leite Frimesa": {kcal:333, prot:7.5, carb:60, gord:7},
+  "Wafer Arcor Passion chocolate": {kcal:540, prot:6.7, carb:54, gord:32},
   "Óleo de soja": {kcal:884, prot:0, carb:0, gord:100},
   "Óleo de girassol": {kcal:884, prot:0, carb:0, gord:100},
   "Margarina com sal": {kcal:594, prot:0, carb:0, gord:67.2},
@@ -366,18 +369,18 @@ const FIBRA = {
   "Tomate": 1.2, "Cenoura crua": 3.2, "Beterraba cozida": 2.0, "Beterraba crua": 2.8, "Alface crespa": 1.3,
   "Mamão": 1.8, "Maçã": 1.3, "Melão": 0.9, "Melancia": 0.4, "Tangerina": 1.8, "Mexerica morgote": 1.8,
   "Chocolate amargo (70%)": 11, "Chocolate ao leite": 2.0, "Cocada": 2.0,
-  "Geleia de morango Chemberry": 0.5, "Pão francês": 2.3, "Pão de forma": 2.3, "Pão de bisnaguinha": 2.0,
+  "Geleia de morango Chemberry": 0.5, "Pão francês": 2.3, "Pão de forma": 2.3, "Pão de bisnaguinha": 2.0, "Biscoito Lev Magic Toast": 3.1, "Wafer Arcor Passion chocolate": 4.5,
   "Parmalat Fit chocolate (bebida láctea)": 0.3
 };
 
 // alimentos agrupados por tipo (só para organizar a lista; os valores ficam em ALIMENTOS)
 const GRUPOS = {
-  "Grãos e cereais": ["Arroz cozido", "Feijão carioca cozido", "Aveia (flocos)", "Pão francês", "Pão de forma", "Pão de bisnaguinha"],
+  "Grãos e cereais": ["Arroz cozido", "Feijão carioca cozido", "Aveia (flocos)", "Pão francês", "Pão de forma", "Pão de bisnaguinha", "Biscoito Lev Magic Toast"],
   "Frutas": ["Banana", "Banana nanica", "Mamão", "Melão", "Melancia", "Mexerica morgote", "Tangerina", "Manga", "Maçã"],
   "Legumes e verduras": ["Tomate", "Cenoura crua", "Beterraba cozida", "Beterraba crua", "Alface crespa", "Brócolis cru"],
   "Carnes e ovos": ["Frango grelhado (peito)", "Ovo cozido", "Ovo cru", "Presunto", "Filé mignon bovino (cru, sem gordura)", "Patinho bovino (cru, sem gordura)"],
   "Laticínios": ["Iogurte Danone desnatado", "Creme de ricota", "Requeijão cremoso", "Leite desnatado", "Queijo branco", "Mussarela", "Whey protein", "Parmalat Fit chocolate (bebida láctea)", "Parmalat Fit chocolate 15 g de proteína (bebida láctea)", "Cream cheese Philadelphia Light", "Whey Nutraforce"],
-  "Doces": ["Mel", "Geleia de morango Chemberry", "Chocolate amargo (70%)", "Chocolate ao leite", "Bombom Alpino (ao leite)", "Bombom Ouro Branco", "Bombom Sonho de Valsa", "Cocada", "Bolo de padaria (aipim ou milho, média)"],
+  "Doces": ["Mel", "Geleia de morango Chemberry", "Chocolate amargo (70%)", "Chocolate ao leite", "Bombom Alpino (ao leite)", "Bombom Ouro Branco", "Bombom Sonho de Valsa", "Cocada", "Bolo de padaria (aipim ou milho, média)", "Doce de leite Frimesa", "Wafer Arcor Passion chocolate"],
   "Gorduras e temperos": ["Azeite de oliva", "Manteiga", "Óleo de soja", "Óleo de girassol", "Margarina com sal", "Castanha do Brasil crua", "Castanha de caju"],
   "Bebidas": ["Cappuccino de máquina (café com leite)", "Malzbier", "Coca-Cola Zero", "Chá mate Leão Zero", "Água de coco Sococo"]
 };
@@ -439,7 +442,9 @@ const UNIDADES = {
   "Bombom Ouro Branco":  { g: 20,  singular: "bombom", plural: "bombons" },
   "Bombom Sonho de Valsa": { g: 21.5, singular: "bombom", plural: "bombons" },
   "Leite desnatado":    { g: 200, singular: "copo",         plural: "copos" },
-  "Maçã":               { g: 130, singular: "maçã",         plural: "maçãs" }
+  "Maçã":               { g: 130, singular: "maçã",         plural: "maçãs" },
+  "Biscoito Lev Magic Toast": { g: 18.3, singular: "porção de 6 biscoitos", plural: "porções de 6 biscoitos" },
+  "Wafer Arcor Passion chocolate": { g: 10, singular: "biscoito", plural: "biscoitos" }
 };
 // texto ao lado do nome na lista: quanto vale uma unidade (ex.: banana nanica ≈ 120 g)
 function rotuloUnidade(nome) {
